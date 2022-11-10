@@ -59,7 +59,7 @@ spring:
       password:
    rest:
       iexBasePath: https://cloud.iexapis.com/stable/
-      iexToken: pk_8bf2fa8153b64102b1d34199273d2063
+
 
 # set debug to get spring to log the classpath (and other things) on startup
 debug: true
