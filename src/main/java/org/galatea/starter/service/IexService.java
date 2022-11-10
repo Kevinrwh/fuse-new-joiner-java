@@ -61,11 +61,11 @@ public class IexService {
     }
 
     // Call the endpoint based on input. Date has priority when both date and range are provided.
-    if(StringUtils.isBlank(range) == false && StringUtils.isBlank(date) == false) {
+    if(StringUtils.isNotBlank(range) && StringUtils.isNotBlank(date)) {
       return iexClient.getHistoricalPricesForSymbolDateAndRange(symbol, range, date);
     } else if(range == null && date == null) {
       return iexClient.getHistoricalPricesForSymbol(symbol);
-    } else if(StringUtils.isBlank(date) == false) {
+    } else if(StringUtils.isNotBlank(date)) {
        return iexClient.getHistoricalPricesDate(symbol, date);
     } else if(date == null && range != null) {
       if(range.equals("")) {
