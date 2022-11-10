@@ -3,3 +3,6 @@
 !.idea/runConfigurations
 *.iml
 logs/*
+
+### Local Configuration ###
+src/main/resources/application-dev.yml
