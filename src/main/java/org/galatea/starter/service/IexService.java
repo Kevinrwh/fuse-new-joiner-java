@@ -9,21 +9,26 @@ import org.galatea.starter.domain.IexHistoricalPrices;
 import org.galatea.starter.domain.IexLastTradedPrice;
 import org.galatea.starter.domain.IexSymbol;
 import org.galatea.starter.entrypoint.exception.EntityNotFoundException;
+import org.galatea.starter.repository.HistoricalPricesRepository;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * A layer for transformation, aggregation, and business required when retrieving data from IEX.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class IexService {
+public class IexService implements IexHistoricalPriceService {
 
   @NonNull
   private IexClient iexClient;
 
+  @Autowired
+  private HistoricalPricesRepository historicalPricesRepository;
 
   /**
    * Get all stock symbols from IEX.
@@ -81,5 +86,16 @@ public class IexService {
 
     return iexClient.getHistoricalPricesForSymbol(symbol);
 
+  }
+
+  @Override
+  public IexHistoricalPrices saveIexHistoricalPrices(IexHistoricalPrices iexHistoricalPrices) {
+    return historicalPricesRepository.save(iexHistoricalPrices);
+  }
+
+  @Override
+  public List<IexHistoricalPrices> fetchIexHistoricalPricesList() {
+    return (List<IexHistoricalPrices>)
+        historicalPricesRepository.findAll();
   }
 }
