@@ -1,21 +1,16 @@
 package org.galatea.starter.service;
 
-import org.galatea.starter.domain.IexHistoricalPrices;
+import org.galatea.starter.domain.IexHistoricalPrice;
 import java.util.List;
+import org.galatea.starter.domain.IexHistoricalPrices;
 
 // Interface
-public interface IexService {
+public interface IexHistoricalPriceService {
 
   // Save operation
-  IexHistoricalPrices saveIexHistoricalPrices(IexHistoricalPrices iexHistoricalPrices);
+  IexHistoricalPrices saveIexHistoricalPrice(IexHistoricalPrices iexHistoricalPrices);
 
   // Read operation
-  List<IexHistoricalPrices> fetchIexHistoricalPricesList();
+  List<IexHistoricalPrices> fetchIexHistoricalPriceList();
 
-  // Update operation
-//  IexHistoricalPrices updateIexHistoricalPrices(IexHistoricalPrices iexHistoricalPrices,
-//      Long iexHistoricalPricesId);
-
-  // Delete operation
-//  void deleteIexHistoricalPricesById(Long iexHistoricalPricesId);
 }

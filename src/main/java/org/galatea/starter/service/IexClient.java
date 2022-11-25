@@ -1,7 +1,7 @@
 package org.galatea.starter.service;
 
 import java.util.List;
-import org.galatea.starter.domain.IexHistoricalPrices;
+import org.galatea.starter.domain.IexHistoricalPrice;
 import org.galatea.starter.domain.IexLastTradedPrice;
 import org.galatea.starter.domain.IexSymbol;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -44,22 +44,22 @@ public interface IexClient {
    * @return a list of the historical prices for each of the symbols passed in.
    */
   @GetMapping("/stock/{symbol}/chart/{range}/{date}?chartByDay=True&token=${spring.rest.iexToken}")
-  List<IexHistoricalPrices> getHistoricalPricesForSymbolDateAndRange(@PathVariable(name="symbol", required = false) String symbol,
+  List<IexHistoricalPrice> getHistoricalPricesForSymbolDateAndRange(@PathVariable(name="symbol", required = false) String symbol,
       @PathVariable(name= "range", required = false) String range,
       @PathVariable(name = "date", required = false) String date);
 
   @GetMapping("/stock/chart?token=${spring.rest.iexToken}")
-  List<IexHistoricalPrices> getHistoricalPrices();
+  List<IexHistoricalPrice> getHistoricalPrices();
 
   @GetMapping("/stock/{symbol}/chart?token=${spring.rest.iexToken}")
-  List<IexHistoricalPrices> getHistoricalPricesForSymbol(@PathVariable(name="symbol") String symbol);
+  List<IexHistoricalPrice> getHistoricalPricesForSymbol(@PathVariable(name="symbol") String symbol);
 
   @GetMapping("/stock/{symbol}/chart/{range}?token=${spring.rest.iexToken}")
-  List<IexHistoricalPrices> getHistoricalPricesRange(@PathVariable(name="symbol") String symbol,
+  List<IexHistoricalPrice> getHistoricalPricesRange(@PathVariable(name="symbol") String symbol,
       @PathVariable(name="range") String range);
 
   @GetMapping("/stock/{symbol}/chart/date/{date}?chartByDay=True&token=${spring.rest.iexToken}")
-  List<IexHistoricalPrices> getHistoricalPricesDate(@PathVariable(name="symbol") String symbol,
+  List<IexHistoricalPrice> getHistoricalPricesDate(@PathVariable(name="symbol") String symbol,
       @PathVariable(name="date") String date);
 
 }

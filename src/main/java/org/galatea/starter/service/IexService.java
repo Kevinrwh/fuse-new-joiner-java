@@ -5,6 +5,7 @@ import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.galatea.starter.domain.IexHistoricalPrice;
 import org.galatea.starter.domain.IexHistoricalPrices;
 import org.galatea.starter.domain.IexLastTradedPrice;
 import org.galatea.starter.domain.IexSymbol;
@@ -58,7 +59,7 @@ public class IexService implements IexHistoricalPriceService {
    * @param range an optional range to check
    * @param date an optional date to check; has priority over range
    */
-  public List<IexHistoricalPrices> getHistoricalPricesForSymbols(final String symbol, final String range, final String date) throws Exception{
+  public List<IexHistoricalPrice> getHistoricalPricesForSymbols(final String symbol, final String range, final String date) throws Exception{
 
     // Throw an error if an invalid symbol was provided
     if(StringUtils.isBlank(symbol)) {
@@ -89,12 +90,12 @@ public class IexService implements IexHistoricalPriceService {
   }
 
   @Override
-  public IexHistoricalPrices saveIexHistoricalPrices(IexHistoricalPrices iexHistoricalPrices) {
+  public IexHistoricalPrices saveIexHistoricalPrice(IexHistoricalPrices iexHistoricalPrices) {
     return historicalPricesRepository.save(iexHistoricalPrices);
   }
 
   @Override
-  public List<IexHistoricalPrices> fetchIexHistoricalPricesList() {
+  public List<IexHistoricalPrices> fetchIexHistoricalPriceList() {
     return (List<IexHistoricalPrices>)
         historicalPricesRepository.findAll();
   }

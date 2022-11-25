@@ -10,18 +10,18 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import lombok.NoArgsConstructor;
 
-@Entity
-@NoArgsConstructor
-@AllArgsConstructor
+//@Entity
+//@NoArgsConstructor
+//@AllArgsConstructor
 @Data
 @Builder
 
 // Class
-public class IexHistoricalPrices {
+public class IexHistoricalPrice {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
-  private Long id;
+//  @Id
+//  @GeneratedValue(strategy = GenerationType.AUTO)
+//  private Long id;
   private BigDecimal close;
   private BigDecimal high;
   private BigDecimal low;

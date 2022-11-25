@@ -9,12 +9,19 @@ spring:
       # in case you want to use H2 with a file persistence or as a service
       # reference http://www.h2database.com/html/cheatSheet.html and
       # http://www.h2database.com/html/tutorial.html#using_server
-      url: jdbc:h2:mem:testtest
+      url: jdbc:h2:mem:test
       driver-class-name: org.h2.Driver
    jpa:
       hibernate:
          ddl-auto: update
       database-platform: org.hibernate.dialect.MySQL5Dialect
+      defer-datasource-initialization: true
+   h2:
+      console:
+         enabled: true
+         path: /h2-console
+         settings.trace: false
+         settings.web-allow-others: false
 
 mvc:
    settleMissionPath: /settlementEngine
@@ -54,9 +61,24 @@ spring:
 # Dev properties go here
 spring:
    profiles: dev
+   main:
+      allow-bean-definition-overriding: true
    datasource:
       username: sa
       password:
+      url: jdbc:h2:mem:dev
+      driver-class-name: org.h2.Driver
+   jpa:
+      hibernate:
+         ddl-auto: update
+      database-platform: org.hibernate.dialect.MySQL5Dialect
+      defer-datasource-initialization: true
+   h2:
+      console:
+         enabled: true
+         path: /h2-console
+         settings.trace: false
+         settings.web-allow-others: false
    rest:
       iexBasePath: https://cloud.iexapis.com/stable/
 

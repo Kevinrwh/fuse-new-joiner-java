@@ -1,20 +1,27 @@
 package org.galatea.starter.entrypoint;
 
 import java.util.List;
+import javax.validation.Valid;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.aspect4log.Log;
 import net.sf.aspect4log.Log.Level;
+import org.galatea.starter.domain.IexHistoricalPrice;
 import org.galatea.starter.domain.IexHistoricalPrices;
 import org.galatea.starter.domain.IexLastTradedPrice;
 import org.galatea.starter.domain.IexSymbol;
 import org.galatea.starter.service.IexService;
+import org.galatea.starter.service.IexHistoricalPriceService;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+
 
 @Slf4j
 @Log(enterLevel = Level.INFO, exitLevel = Level.INFO)
@@ -22,6 +29,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 public class IexRestController {
+
+  @Autowired
+  private IexHistoricalPriceService iexHistoricalPriceService;
 
   @NonNull
   private IexService iexService;
@@ -56,12 +66,27 @@ public class IexRestController {
    */
   @GetMapping(value = "${mvc.iex.getHistoricalPricesPath}", produces = {
       MediaType.APPLICATION_JSON_VALUE})
-  public List<IexHistoricalPrices> getHistoricalPrices(
+  public List<IexHistoricalPrice> getHistoricalPrices(
       @RequestParam(value = "symbol", required = false) final String symbol,
       @RequestParam(value="range", required = false) final String range,
       @RequestParam(value="date", required = false) final String date) throws Exception{
 
     return iexService.getHistoricalPricesForSymbols(symbol, range, date);
+  }
+
+  // Save operation
+  @PostMapping(value = "/iexHistoricalPrices")
+  public IexHistoricalPrices saveIexHistoricalPrices(
+      @Valid @RequestBody IexHistoricalPrices iexHistoricalPrices)
+  {
+    return iexHistoricalPriceService.saveIexHistoricalPrice(iexHistoricalPrices);
+  }
+
+  // Read operation
+  @GetMapping(value = "/iexHistoricalPrices")
+  public List<IexHistoricalPrices> fetchIexHistoricalPricesList()
+  {
+    return iexHistoricalPriceService.fetchIexHistoricalPriceList();
   }
 
 }
