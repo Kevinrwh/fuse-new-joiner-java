@@ -1,8 +1,8 @@
 package org.galatea.starter.domain;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -22,21 +22,15 @@ public class IexHistoricalPrices {
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   private Long id;
-//  private String symbol;
-////  private String range; // default is 30
-//
-//  private String date;
-//
-//  private String range;
-//  private String hp;
+  private String range;
   private BigDecimal close;
   private BigDecimal high;
   private BigDecimal low;
   private BigDecimal open;
   private String symbol;
   private Integer volume;
+  @JsonFormat(pattern="yyyy-MM-dd")
   private LocalDate date;
-  private String range;
 
   public IexHistoricalPrices(IexHistoricalPrice hp) {
 
@@ -47,7 +41,7 @@ public class IexHistoricalPrices {
     this.symbol = hp.getSymbol();
     this.volume = hp.getVolume();
     this.date = hp.getDate();
-
+    this.range = "1D";
   }
 
   public IexHistoricalPrices(IexHistoricalPrice hp, String range) {

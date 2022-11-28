@@ -10,16 +10,8 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-
-// Interface extending CrudRepository
 public interface HistoricalPricesRepository
     extends JpaRepository<IexHistoricalPrices, Long> {
-
-//  List<IexHistoricalPrices> findByDate(String symbol, String date);
-//
-//  List<IexHistoricalPrices> findByRange(String symbol, String range);
-//
-//  List<IexHistoricalPrices> findBySymbol(String symbol);
 
   @Query("select u from IexHistoricalPrices u where u.symbol = :symbol AND u.date = :date")
   List<IexHistoricalPrices> findByDate(
@@ -39,7 +31,4 @@ public interface HistoricalPricesRepository
       @Param("range") String range
   );
 
-//  @Query("select a from Article a where a.creationDateTime <= :creationDateTime")
-//  List<Article> findAllWithCreationDateTimeBefore(
-//      @Param("creationDateTime") Date creationDateTime);
 }

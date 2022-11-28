@@ -12,6 +12,7 @@ public interface IexHistoricalPriceService {
   // Read operation
   List<IexHistoricalPrices> fetchIexHistoricalPricesList();
 
+  // Fetch operations by date, range, and symbol
   public List<IexHistoricalPrices> fetchHistoricalPricesDate(String symbol, String date);
 
   public List<IexHistoricalPrices> fetchHistoricalPricesRange(String symbol, String range);

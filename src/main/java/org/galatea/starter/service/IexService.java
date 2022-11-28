@@ -1,6 +1,5 @@
 package org.galatea.starter.service;
 
-import java.sql.Date;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,7 +13,6 @@ import org.galatea.starter.domain.IexLastTradedPrice;
 import org.galatea.starter.domain.IexSymbol;
 import org.galatea.starter.entrypoint.exception.EntityNotFoundException;
 import org.galatea.starter.repository.HistoricalPricesRepository;
-import org.h2.util.ToDateParser;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -59,7 +57,8 @@ public class IexService implements IexHistoricalPriceService {
     }
   }
 
-  /** Get historical prices for the symbol, range, and date combination
+  /** Get historical prices for the symbol, range, and date combination.
+   * Store values for quicker retrieval.
    * @param symbol a valid symbol
    * @param range an optional range to check
    * @param date an optional date to check; has priority over range
@@ -67,32 +66,35 @@ public class IexService implements IexHistoricalPriceService {
   public List<IexHistoricalPrice> getHistoricalPricesForSymbols(final String symbol, final String range, final String date) throws Exception{
 
     List<IexHistoricalPrice> result = new ArrayList<IexHistoricalPrice>();
+    List<IexHistoricalPrices> hps = new ArrayList<IexHistoricalPrices>();
 
-    // Throw an error if an invalid symbol was provided
+    // No symbol provided
     if(StringUtils.isBlank(symbol)) {
       throw new EntityNotFoundException(symbol.getClass(), symbol);
     }
 
-    // Call the endpoint based on input. Date has priority when both date and range are provided.
-    if(StringUtils.isNotBlank(range) && StringUtils.isNotBlank(date)) { // both provided; date has priority
-      List<IexHistoricalPrices> ans = fetchHistoricalPricesDate(symbol, date);
-      if(ans.isEmpty()) {
-        result = iexClient.getHistoricalPricesForSymbolDateAndRange(symbol, range, date);
+    // Retrieve for date if both date and range are provided
+    if(StringUtils.isNotBlank(range) && StringUtils.isNotBlank(date)) {
+
+      hps.addAll(fetchHistoricalPricesDate(symbol, date));
+
+      if(hps.isEmpty()) {
+        result.addAll(iexClient.getHistoricalPricesForSymbolDateAndRange(symbol, range, date));
         saveIexHistoricalPrices(new IexHistoricalPrices(result.get(0)));
       } else {
-        List<IexHistoricalPrices> hp = fetchHistoricalPricesDate(symbol, date);
-        // Converts and saves each hps into a list of hp
-        result.add(new IexHistoricalPrice(hp.get(0)));
+        result.add(new IexHistoricalPrice(hps.get(0)));
       }
 
-    } else if(range == null && date == null) { // only symbol provided, range is 30d
-      if(fetchHistoricalPricesSymbol(symbol).isEmpty()) {
-        result = iexClient.getHistoricalPricesForSymbol(symbol);
+    } else if(range == null && date == null) { // Default is query for a range of 30 days
+
+      hps.addAll(fetchHistoricalPricesSymbol(symbol));
+
+      if(hps.isEmpty()) {
+        result.addAll(iexClient.getHistoricalPricesForSymbol(symbol));
         for(int i = 0; i < result.size(); i++) {
           saveIexHistoricalPrices(new IexHistoricalPrices(result.get(i), "30d"));
         }
       } else{
-        List<IexHistoricalPrices> hps = fetchHistoricalPricesSymbol(symbol);
 
         for(int i = 0; i < hps.size(); i++){
           result.add(new IexHistoricalPrice(
@@ -101,57 +103,46 @@ public class IexService implements IexHistoricalPriceService {
         }
 
       }
-    } else if(StringUtils.isNotBlank(date)) { // date provided
-      if(fetchHistoricalPricesDate(symbol, date).isEmpty()) {
-        result = iexClient.getHistoricalPricesDate(symbol, date);
+    } else if(range == null && date != null) { // Query for specified date
+      if(date.equals("")) {
+        throw new HttpMessageNotReadableException("\"date\" is not allowed to be empty");
+      }
+
+      hps.addAll(fetchHistoricalPricesDate(symbol, date));
+
+      if(hps.isEmpty()) {
+        result.addAll(iexClient.getHistoricalPricesDate(symbol, date));
         saveIexHistoricalPrices(new IexHistoricalPrices(result.get(0)));
       } else {
         result.add(new IexHistoricalPrice(
             fetchHistoricalPricesDate(symbol, date).get(0)
         ));
       }
-    } else if(date == null && range != null) { // range provided, may be whitespace
+    }
+    else if(date == null && range != null) { // Query for specified range
+
       if(range.equals("")) {
         throw new HttpMessageNotReadableException("\"range\" is not allowed to be empty");
       }
 
-      if(fetchHistoricalPricesRange(symbol, range).isEmpty()) {
-        result = iexClient.getHistoricalPricesRange(symbol, range);
+      hps.addAll(fetchHistoricalPricesRange(symbol, range));
+
+      if(hps.isEmpty()) {
+        result.addAll(iexClient.getHistoricalPricesRange(symbol, range));
         for (int i = 0; i < result.size(); i++) {
           IexHistoricalPrice hp = result.get(i);
           saveIexHistoricalPrices(new IexHistoricalPrices(hp, range));
         }
       } else {
-        List<IexHistoricalPrices> hps = fetchHistoricalPricesRange(symbol, range);
+        hps.addAll(fetchHistoricalPricesRange(symbol, range));
         for(int i = 0; i < hps.size(); i++) {
           IexHistoricalPrice hp = new IexHistoricalPrice(hps.get(i));
           result.add(hp);
         }
       }
-//      saveIexHistoricalPrice(new IexHistoricalPrices(symbol, date, result));
-    } else if(range == null && date != null) { // date provided, may be whitespace
-      if(date.equals("")) {
-        throw new HttpMessageNotReadableException("\"date\" is not allowed to be empty");
-      }
-
-      if(fetchHistoricalPricesDate(symbol, date).isEmpty()) {
-        result = iexClient.getHistoricalPricesDate(symbol, date);
-        saveIexHistoricalPrices(new IexHistoricalPrices(result.get(0)));
-      } else {
-        result.add(new IexHistoricalPrice(
-            fetchHistoricalPricesDate(symbol, date).get(0)
-        ));
-      }
     }
 
-    if(result.isEmpty()) {
-      result = iexClient.getHistoricalPricesForSymbol(symbol); // range
-      for(int i = 0; i < result.size(); i++){
-        IexHistoricalPrice hp = result.get(i);
-        saveIexHistoricalPrices(new IexHistoricalPrices(hp, "30d"));
-      }
-    }
-
+    // Return the response or an empty list
     return result;
 
   }
