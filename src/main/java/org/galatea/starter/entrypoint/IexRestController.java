@@ -56,6 +56,7 @@ public class IexRestController {
       MediaType.APPLICATION_JSON_VALUE})
   public List<IexLastTradedPrice> getLastTradedPrice(
       @RequestParam(value = "symbols") final List<String> symbols) {
+
     return iexService.getLastTradedPriceForSymbols(symbols);
   }
 
@@ -71,7 +72,8 @@ public class IexRestController {
       @RequestParam(value="range", required = false) final String range,
       @RequestParam(value="date", required = false) final String date) throws Exception{
 
-    return iexService.getHistoricalPricesForSymbols(symbol, range, date);
+      return iexService.getHistoricalPricesForSymbols(symbol, range, date);
+
   }
 
   // Save operation
@@ -79,14 +81,14 @@ public class IexRestController {
   public IexHistoricalPrices saveIexHistoricalPrices(
       @Valid @RequestBody IexHistoricalPrices iexHistoricalPrices)
   {
-    return iexHistoricalPriceService.saveIexHistoricalPrice(iexHistoricalPrices);
+    return iexHistoricalPriceService.saveIexHistoricalPrices(iexHistoricalPrices);
   }
 
   // Read operation
   @GetMapping(value = "/iexHistoricalPrices")
   public List<IexHistoricalPrices> fetchIexHistoricalPricesList()
   {
-    return iexHistoricalPriceService.fetchIexHistoricalPriceList();
+    return iexHistoricalPriceService.fetchIexHistoricalPricesList();
   }
 
 }

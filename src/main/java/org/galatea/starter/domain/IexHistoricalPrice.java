@@ -1,33 +1,35 @@
 package org.galatea.starter.domain;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import lombok.NoArgsConstructor;
 
-//@Entity
-//@NoArgsConstructor
-//@AllArgsConstructor
 @Data
-@Builder
+//@Builder
+@NoArgsConstructor
 
 // Class
 public class IexHistoricalPrice {
 
-//  @Id
-//  @GeneratedValue(strategy = GenerationType.AUTO)
-//  private Long id;
   private BigDecimal close;
   private BigDecimal high;
   private BigDecimal low;
   private BigDecimal open;
   private String symbol;
   private Integer volume;
-  private String date;
+  private LocalDate date;
+
+  public IexHistoricalPrice(IexHistoricalPrices hp) {
+    this.close = hp.getClose();
+    this.high = hp.getHigh();
+    this.low = hp.getLow();
+    this.open = hp.getOpen();
+    this.symbol = hp.getSymbol();
+    this.volume = hp.getVolume();
+    this.date = hp.getDate();
+  }
 
 }

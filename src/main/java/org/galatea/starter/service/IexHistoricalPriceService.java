@@ -1,6 +1,5 @@
 package org.galatea.starter.service;
 
-import org.galatea.starter.domain.IexHistoricalPrice;
 import java.util.List;
 import org.galatea.starter.domain.IexHistoricalPrices;
 
@@ -8,9 +7,14 @@ import org.galatea.starter.domain.IexHistoricalPrices;
 public interface IexHistoricalPriceService {
 
   // Save operation
-  IexHistoricalPrices saveIexHistoricalPrice(IexHistoricalPrices iexHistoricalPrices);
+  IexHistoricalPrices saveIexHistoricalPrices(IexHistoricalPrices iexHistoricalPrices);
 
   // Read operation
-  List<IexHistoricalPrices> fetchIexHistoricalPriceList();
+  List<IexHistoricalPrices> fetchIexHistoricalPricesList();
 
+  public List<IexHistoricalPrices> fetchHistoricalPricesDate(String symbol, String date);
+
+  public List<IexHistoricalPrices> fetchHistoricalPricesRange(String symbol, String range);
+
+  public List<IexHistoricalPrices> fetchHistoricalPricesSymbol(String symbol);
 }
