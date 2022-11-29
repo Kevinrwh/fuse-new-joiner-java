@@ -32,10 +32,14 @@ public class IexHistoricalPrices {
   private BigDecimal open;
   private String symbol;
   private Integer volume;
-  @JsonFormat(pattern="yyyy-MM-dd")
+  @JsonFormat(pattern = "yyyy-MM-dd")
   private LocalDate date;
 
-  public IexHistoricalPrices(IexHistoricalPrice hp) {
+  /**
+   * Constructor to store a historical price.
+   * @param hp a historical price to store
+   */
+  public IexHistoricalPrices(final IexHistoricalPrice hp) {
 
     this.close = hp.getClose();
     this.high = hp.getHigh();
@@ -47,7 +51,11 @@ public class IexHistoricalPrices {
     this.range = "1D";
   }
 
-  public IexHistoricalPrices(IexHistoricalPrice hp, String range) {
+  /**
+   * Constructor to store a historical price belonging to a range.
+   * @param hp a historical price to store in a range.
+   */
+  public IexHistoricalPrices(final IexHistoricalPrice hp, final String range) {
     this.close = hp.getClose();
     this.high = hp.getHigh();
     this.low = hp.getLow();

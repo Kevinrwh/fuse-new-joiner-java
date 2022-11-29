@@ -11,17 +11,16 @@ import org.galatea.starter.domain.IexHistoricalPrice;
 import org.galatea.starter.domain.IexHistoricalPrices;
 import org.galatea.starter.domain.IexLastTradedPrice;
 import org.galatea.starter.domain.IexSymbol;
-import org.galatea.starter.service.IexService;
 import org.galatea.starter.service.IexHistoricalPriceService;
+import org.galatea.starter.service.IexService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-
 
 @Slf4j
 @Log(enterLevel = Level.INFO, exitLevel = Level.INFO)
@@ -37,7 +36,7 @@ public class IexRestController {
   private IexService iexService;
 
   /**
-   * Exposes an endpoint to get all of the symbols available on IEX.
+   * Exposes an endpoint to get all symbols available on IEX.
    *
    * @return a list of all IexStockSymbols.
    */
@@ -72,22 +71,27 @@ public class IexRestController {
       @RequestParam(value = "range", required = false) final String range,
       @RequestParam(value = "date", required = false) final String date) throws Exception {
 
-      return iexService.getHistoricalPricesForSymbols(symbol, range, date);
+    return iexService.getHistoricalPricesForSymbols(symbol, range, date);
 
   }
 
-  // Save operation
+  /**
+   * Post a new historical price.
+   * @param iexHistoricalPrices a historical prices to store
+   * @return a stored historical price
+   */
   @PostMapping(value = "/iexHistoricalPrices")
   public IexHistoricalPrices saveIexHistoricalPrices(
-      @Valid @RequestBody IexHistoricalPrices iexHistoricalPrices)
-  {
+      @Valid @RequestBody final IexHistoricalPrices iexHistoricalPrices) {
     return iexHistoricalPriceService.saveIexHistoricalPrices(iexHistoricalPrices);
   }
 
-  // Read operation
+  /**
+   * Return a list of historical prices.
+   * @return a stored historical price
+   */
   @GetMapping(value = "/iexHistoricalPrices")
-  public List<IexHistoricalPrices> fetchIexHistoricalPricesList()
-  {
+  public List<IexHistoricalPrices> fetchIexHistoricalPricesList() {
     return iexHistoricalPriceService.fetchIexHistoricalPricesList();
   }
 

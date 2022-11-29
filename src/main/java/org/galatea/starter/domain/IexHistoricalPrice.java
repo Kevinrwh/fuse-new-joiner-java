@@ -16,10 +16,14 @@ public class IexHistoricalPrice {
   private BigDecimal open;
   private String symbol;
   private Integer volume;
-  @JsonFormat(pattern="yyyy-MM-dd")
+  @JsonFormat(pattern = "yyyy-MM-dd")
   private LocalDate date;
 
-  public IexHistoricalPrice(IexHistoricalPrices hp) {
+  /**
+   * Constructor for the returned data from the repository.
+   * @param hp a stored historical price
+   */
+  public IexHistoricalPrice(final IexHistoricalPrices hp) {
     this.close = hp.getClose();
     this.high = hp.getHigh();
     this.low = hp.getLow();
