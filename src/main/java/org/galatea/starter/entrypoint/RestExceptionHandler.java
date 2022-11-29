@@ -81,7 +81,7 @@ public class RestExceptionHandler {
     int status = exception.status();
     String errorMessage = exception.getMessage();
 
-    if(status == 404){
+    if (status == 404) {
       return buildResponseEntity(new ApiError(HttpStatus.NOT_FOUND, errorMessage));
     }
 

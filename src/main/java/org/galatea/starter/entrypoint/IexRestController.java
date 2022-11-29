@@ -49,7 +49,7 @@ public class IexRestController {
     return iexService.getLastTradedPriceForSymbols(symbols);
   }
 
-  /** Get historical prices for the symbol
+  /** Get historical prices for the symbol.
   * @param symbol a symbol to find historical prices for
    * @param range an optional range to check
    * @param date an optional date to check
@@ -58,8 +58,8 @@ public class IexRestController {
       MediaType.APPLICATION_JSON_VALUE})
   public List<IexHistoricalPrices> getHistoricalPrices(
       @RequestParam(value = "symbol", required = false) final String symbol,
-      @RequestParam(value="range", required = false) final String range,
-      @RequestParam(value="date", required = false) final String date) throws Exception{
+      @RequestParam(value = "range", required = false) final String range,
+      @RequestParam(value = "date", required = false) final String date) throws Exception {
 
     return iexService.getHistoricalPricesForSymbols(symbol, range, date);
   }
