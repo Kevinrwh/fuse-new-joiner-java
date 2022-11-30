@@ -8,6 +8,7 @@ import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.asm.Advice.Local;
 import org.apache.commons.lang3.StringUtils;
 import org.galatea.starter.domain.IexHistoricalPrice;
 import org.galatea.starter.domain.IexHistoricalPrices;
@@ -69,7 +70,8 @@ public class IexService implements IexHistoricalPriceService {
       final String date) throws Exception {
 
     List<IexHistoricalPrice> result = new ArrayList<IexHistoricalPrice>();
-    List<IexHistoricalPrices> hps = new ArrayList<IexHistoricalPrices>();
+//    List<IexHistoricalPrices> hps = new ArrayList<IexHistoricalPrices>();
+    List<IexHistoricalPrices> storedHistoricalPrices = new ArrayList<IexHistoricalPrices>();
 
     // No symbol provided
     if (StringUtils.isBlank(symbol)) {
@@ -79,68 +81,146 @@ public class IexService implements IexHistoricalPriceService {
     // Retrieve for date if both date and range are provided
     if (StringUtils.isNotBlank(range) && StringUtils.isNotBlank(date)) {
 
-      hps.addAll(fetchHistoricalPricesDate(symbol, date));
+//      hps.addAll(fetchHistoricalPricesDate(symbol, date));
+//
+//      if (hps.isEmpty()) {
+//        result.addAll(iexClient.getHistoricalPricesForSymbolDateAndRange(symbol, range, date));
+//        saveIexHistoricalPrices(new IexHistoricalPrices(result.get(0)));
+//      } else {
+//        result.add(new IexHistoricalPrice(hps.get(0)));
+//      }
 
-      if (hps.isEmpty()) {
+      storedHistoricalPrices.addAll(fetchHistoricalPricesDate(symbol, date));
+
+      if(storedHistoricalPrices.isEmpty()) {
         result.addAll(iexClient.getHistoricalPricesForSymbolDateAndRange(symbol, range, date));
         saveIexHistoricalPrices(new IexHistoricalPrices(result.get(0)));
       } else {
-        result.add(new IexHistoricalPrice(hps.get(0)));
+        result.add(result.get(0));
       }
 
     } else if (range == null && date == null) { // Default is query for a range of 30 days
 
-      hps.addAll(fetchHistoricalPricesSymbol(symbol));
+//      hps.addAll(fetchHistoricalPricesSymbol(symbol));
+//
+//      if (hps.isEmpty()) {
+//        result.addAll(iexClient.getHistoricalPricesForSymbol(symbol));
+//        for (int i = 0; i < result.size(); i++) {
+//          saveIexHistoricalPrices(new IexHistoricalPrices(result.get(i), "30d"));
+//        }
+//      } else {
+//
+//        for (int i = 0; i < hps.size(); i++) {
+//          result.add(new IexHistoricalPrice(
+//              hps.get(i)
+//          ));
+//        }
+//      }
 
-      if (hps.isEmpty()) {
-        result.addAll(iexClient.getHistoricalPricesForSymbol(symbol));
-        for (int i = 0; i < result.size(); i++) {
-          saveIexHistoricalPrices(new IexHistoricalPrices(result.get(i), "30d"));
-        }
-      } else {
+      LocalDate end = LocalDate.now();
+      LocalDate start = end.minusDays(30);
 
-        for (int i = 0; i < hps.size(); i++) {
-          result.add(new IexHistoricalPrice(
-              hps.get(i)
-          ));
+      //ToDo: Need to convert the start and end date formats to match the formatter in the fetchByDate method (BASIC ISO)
+      end.format(DateTimeFormatter.BASIC_ISO_DATE);
+      start.format(DateTimeFormatter.BASIC_ISO_DATE);
+
+      while (!start.isAfter(end)) {
+
+        String day = start.toString();
+        storedHistoricalPrices.addAll((fetchHistoricalPricesDate(symbol, day)));
+
+        if (storedHistoricalPrices.isEmpty()) {
+
+          List<IexHistoricalPrice> historicalPrices =
+              iexClient.getHistoricalPricesDate(symbol, day);
+
+          result.add(historicalPrices.get(0));
+          saveIexHistoricalPrices(new IexHistoricalPrices(historicalPrices.get(0)));
+        } else {
+          result.add(new IexHistoricalPrice(storedHistoricalPrices.get(0)));
         }
+
+        start.plusDays(1);
 
       }
+
     } else if (range == null && date != null) { // Query for specified date
+
       if (date.equals("")) {
         throw new HttpMessageNotReadableException("\"date\" is not allowed to be empty");
       }
 
-      hps.addAll(fetchHistoricalPricesDate(symbol, date));
+//      hps.addAll(fetchHistoricalPricesDate(symbol, date));
+//
+//      if (hps.isEmpty()) {
+//        result.addAll(iexClient.getHistoricalPricesDate(symbol, date));
+//        saveIexHistoricalPrices(new IexHistoricalPrices(result.get(0)));
+//      } else {
+//        result.add(new IexHistoricalPrice(
+//            fetchHistoricalPricesDate(symbol, date).get(0)
+//        ));
+//      }
 
-      if (hps.isEmpty()) {
-        result.addAll(iexClient.getHistoricalPricesDate(symbol, date));
-        saveIexHistoricalPrices(new IexHistoricalPrices(result.get(0)));
+      storedHistoricalPrices.addAll(fetchHistoricalPricesDate(symbol, date));
+
+      if (storedHistoricalPrices.isEmpty()) {
+
+        List<IexHistoricalPrice> historicalPrices =
+            iexClient.getHistoricalPricesDate(symbol, date);
+
+        result.add((historicalPrices.get(0)));
+        saveIexHistoricalPrices(new IexHistoricalPrices(historicalPrices.get(0)));
       } else {
-        result.add(new IexHistoricalPrice(
-            fetchHistoricalPricesDate(symbol, date).get(0)
-        ));
+        result.add(new IexHistoricalPrice(storedHistoricalPrices.get(0)));
       }
+
     } else if (date == null && range != null) { // Query for specified range
 
       if (range.equals("")) {
         throw new HttpMessageNotReadableException("\"range\" is not allowed to be empty");
       }
 
-      hps.addAll(fetchHistoricalPricesRange(symbol, range));
+//      hps.addAll(fetchHistoricalPricesRange(symbol, range));
+//
+//      if (hps.isEmpty()) {
+//        result.addAll(iexClient.getHistoricalPricesRange(symbol, range));
+//        for (int i = 0; i < result.size(); i++) {
+//          IexHistoricalPrice hp = result.get(i);
+//          saveIexHistoricalPrices(new IexHistoricalPrices(hp, range));
+//        }
+//      } else {
+//        hps.addAll(fetchHistoricalPricesRange(symbol, range));
+//        for (int i = 0; i < hps.size(); i++) {
+//          IexHistoricalPrice hp = new IexHistoricalPrice(hps.get(i));
+//          result.add(hp);
+//        }
+//      }
 
-      if (hps.isEmpty()) {
-        result.addAll(iexClient.getHistoricalPricesRange(symbol, range));
-        for (int i = 0; i < result.size(); i++) {
-          IexHistoricalPrice hp = result.get(i);
-          saveIexHistoricalPrices(new IexHistoricalPrices(hp, range));
+      /**
+       * Scenarios: max, years (y), ytd,  months (m), days (d).
+       */
+      List<LocalDate> dates = getDates(range);
+      LocalDate start = dates.get(0);
+      LocalDate end = LocalDate.now();
+
+      while (!start.isAfter(end)) {
+
+        String day = start.toString();
+        storedHistoricalPrices.addAll((fetchHistoricalPricesDate(symbol, day)));
+
+        if (storedHistoricalPrices.isEmpty()) {
+
+          List<IexHistoricalPrice> historicalPrices =
+              iexClient.getHistoricalPricesDate(symbol, day);
+
+          result.add(historicalPrices.get(0));
+          saveIexHistoricalPrices(new IexHistoricalPrices(historicalPrices.get(0)));
+        } else {
+          result.add(new IexHistoricalPrice(storedHistoricalPrices.get(0)));
         }
-      } else {
-        hps.addAll(fetchHistoricalPricesRange(symbol, range));
-        for (int i = 0; i < hps.size(); i++) {
-          IexHistoricalPrice hp = new IexHistoricalPrice(hps.get(i));
-          result.add(hp);
-        }
+
+        start.plusDays(1);
+
       }
     }
 
@@ -165,6 +245,7 @@ public class IexService implements IexHistoricalPriceService {
   public List<IexHistoricalPrices> fetchHistoricalPricesDate(
       final String symbol,
       final String date) {
+
     LocalDate localDate = LocalDate.parse(date, DateTimeFormatter.BASIC_ISO_DATE);
 
     return historicalPricesRepository.findByDate(symbol, localDate);
@@ -181,5 +262,39 @@ public class IexService implements IexHistoricalPriceService {
   public List<IexHistoricalPrices> fetchHistoricalPricesSymbol(
       final String symbol) {
     return historicalPricesRepository.findBySymbol(symbol, "30d");
+  }
+
+  public List<LocalDate> getDates(String range) {
+    LocalDate end = LocalDate.now();
+    List<LocalDate> totalDates = new ArrayList<>();
+    LocalDate start = end.minusDays(30); // default
+
+    // Reassign start value if a range was entered
+    if (range.equalsIgnoreCase("max")) {
+      start = end.minusYears(15);
+    } else if (range.equalsIgnoreCase("5y")) {
+      start = end.minusYears(5);
+    } else if (range.equalsIgnoreCase("2y")) {
+      start = end.minusYears(2);
+    } else if (range.equalsIgnoreCase("1y")) {
+      start = end.minusYears(1);
+    } else if (range.equalsIgnoreCase("ytd")) {
+      // to do
+    } else if (range.equalsIgnoreCase("6m")) {
+      start = end.minusMonths(6);
+    } else if(range.equalsIgnoreCase("3m")) {
+      start = end.minusMonths(3);
+    } else if(range.equalsIgnoreCase("1m") || range.equalsIgnoreCase("1mm")) {
+      start = end.minusMonths(1);
+    } else if(range.equalsIgnoreCase("5d")) {
+      start = end.minusDays(5);
+    }
+
+    while(!start.isAfter(end)) {
+      totalDates.add(start);
+      start.plusDays(1);
+    }
+
+    return totalDates;
   }
 }
