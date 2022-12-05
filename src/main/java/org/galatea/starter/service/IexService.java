@@ -55,9 +55,11 @@ public class IexService implements IexHistoricalPriceService {
     }
   }
 
-  /** Get historical prices for the symbol, range, and date combination. If a range
-   * is provided, get a list of dates in that range and query them independently to
-   * build a result of responses. Use stored results when applicable.
+  /** Get historical prices for the symbol, range, and date combination.
+   * If a range is provided, get a list of dates in that range and
+   * query them independently to build a result of responses.
+   * Use stored results when available. If there are more than one instance
+   * of historical prices for a date, use the most recent one.
    * Store values for quicker retrieval.
    * @param symbol a symbol to reference
    * @param range a range to check prices for
@@ -88,12 +90,12 @@ public class IexService implements IexHistoricalPriceService {
         List<IexHistoricalPrice> historicalPrices = iexClient.getHistoricalPricesForSymbolDateAndRange(symbol, range, date);
 
         if (!historicalPrices.isEmpty()) {
-          result.add(historicalPrices.get(0));
-          saveIexHistoricalPrices(new IexHistoricalPriceDTO(result.get(0)));
+          result.add(historicalPrices.get(historicalPrices.size()-1));
+          saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices.get(historicalPrices.size()-1)));
         }
 
       } else { // Return the stored response
-        result.add(new IexHistoricalPrice(storedHistoricalPrices.get(0)));
+        result.add(new IexHistoricalPrice(storedHistoricalPrices.get(storedHistoricalPrices.size()-1)));
       }
 
     } else if (range == null && date == null) { // Return the default of range at 30 days
@@ -113,12 +115,12 @@ public class IexService implements IexHistoricalPriceService {
               iexClient.getHistoricalPricesDate(symbol, start.format(DateTimeFormatter.BASIC_ISO_DATE));
 
           if(!historicalPrices.isEmpty()) {
-            result.add(historicalPrices.get(0));
-            saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices.get(0)));
+            result.add(historicalPrices.get(historicalPrices.size()-1));
+            saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices.get(historicalPrices.size()-1)));
           }
 
         } else {
-          result.add(new IexHistoricalPrice(pricesForDay.get(0)));
+          result.add(new IexHistoricalPrice(pricesForDay.get(pricesForDay.size()-1)));
         }
 
         // Increment to the next day
@@ -142,11 +144,11 @@ public class IexService implements IexHistoricalPriceService {
             iexClient.getHistoricalPricesDate(symbol, date);
 
         if (!historicalPrices.isEmpty()) {
-          result.add((historicalPrices.get(0)));
-          saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices.get(0)));
+          result.add((historicalPrices.get(historicalPrices.size()-1)));
+          saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices.get(historicalPrices.size()-1)));
         }
       } else {
-        result.add(new IexHistoricalPrice(storedHistoricalPrices.get(0)));
+        result.add(new IexHistoricalPrice(storedHistoricalPrices.get(storedHistoricalPrices.size()-1)));
       }
 
     } else if (date == null && range != null) { // A range was provided
@@ -171,12 +173,12 @@ public class IexService implements IexHistoricalPriceService {
               iexClient.getHistoricalPricesDate(symbol, start.format(DateTimeFormatter.BASIC_ISO_DATE));
 
           if(!historicalPrices.isEmpty()) {
-            result.add(historicalPrices.get(0));
-            saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices.get(0)));
+            result.add(historicalPrices.get(historicalPrices.size()-1));
+            saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices.get(historicalPrices.size()-1)));
           }
 
         } else {
-          result.add(new IexHistoricalPrice(pricesForDay.get(0)));
+          result.add(new IexHistoricalPrice(pricesForDay.get(pricesForDay.size()-1)));
         }
 
         start = start.plusDays(1);
