@@ -1,7 +1,7 @@
 package org.galatea.starter.service;
 
 import java.util.List;
-import org.galatea.starter.domain.IexHistoricalPrices;
+import org.galatea.starter.domain.IexHistoricalPriceDTO;
 
 // Interface
 public interface IexHistoricalPriceService {
@@ -11,13 +11,13 @@ public interface IexHistoricalPriceService {
    * @param iexHistoricalPrices a historical price to save
    * @return the historical price
    */
-  IexHistoricalPrices saveIexHistoricalPrices(IexHistoricalPrices iexHistoricalPrices);
+  IexHistoricalPriceDTO saveIexHistoricalPrices(IexHistoricalPriceDTO iexHistoricalPrices);
 
   /**
    * Save a historical price.
    * @return the list of historical prices
    */
-  List<IexHistoricalPrices> fetchIexHistoricalPricesList();
+  List<IexHistoricalPriceDTO> fetchIexHistoricalPricesList();
 
   /**
    * fetch a historical price given a date.
@@ -25,5 +25,5 @@ public interface IexHistoricalPriceService {
    * @param date a date to check
    * @return the historical price
    */
-  List<IexHistoricalPrices> fetchHistoricalPricesDate(String symbol, String date);
+  List<IexHistoricalPriceDTO> fetchHistoricalPricesDate(String symbol, String date);
 }

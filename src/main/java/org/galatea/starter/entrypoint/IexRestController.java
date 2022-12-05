@@ -7,12 +7,11 @@ import lombok.extern.slf4j.Slf4j;
 import net.sf.aspect4log.Log;
 import net.sf.aspect4log.Log.Level;
 import org.galatea.starter.domain.IexHistoricalPrice;
-import org.galatea.starter.domain.IexHistoricalPrices;
+import org.galatea.starter.domain.IexHistoricalPriceDTO;
 import org.galatea.starter.domain.IexLastTradedPrice;
 import org.galatea.starter.domain.IexSymbol;
 import org.galatea.starter.service.IexHistoricalPriceService;
 import org.galatea.starter.service.IexService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,8 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class IexRestController {
 
-  @Autowired
-  private IexHistoricalPriceService iexHistoricalPriceService;
+  private final IexHistoricalPriceService iexHistoricalPriceService;
 
   @NonNull
   private IexService iexService;
@@ -77,7 +75,7 @@ public class IexRestController {
    * @return a stored historical price
    */
   @GetMapping(value = "/iexHistoricalPrices")
-  public List<IexHistoricalPrices> fetchIexHistoricalPricesList() {
+  public List<IexHistoricalPriceDTO> fetchIexHistoricalPricesList() {
     return iexHistoricalPriceService.fetchIexHistoricalPricesList();
   }
 

@@ -23,7 +23,7 @@ public class IexHistoricalPrice {
    * Constructor for the returned data from the repository.
    * @param hp a stored historical price
    */
-  public IexHistoricalPrice(final IexHistoricalPrices hp) {
+  public IexHistoricalPrice(final IexHistoricalPriceDTO hp) {
     this.close = hp.getClose();
     this.high = hp.getHigh();
     this.low = hp.getLow();
