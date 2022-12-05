@@ -25,20 +25,5 @@ public interface IexHistoricalPriceService {
    * @param date a date to check
    * @return the historical price
    */
-  public List<IexHistoricalPrices> fetchHistoricalPricesDate(String symbol, String date);
-
-  /**
-   * fetch a historical price given a range.
-   * @param symbol a symbol to check
-   * @param range a range to check
-   * @return the historical price
-   */
-  public List<IexHistoricalPrices> fetchHistoricalPricesRange(String symbol, String range);
-
-  /**
-   * fetch a historical price given a range.
-   * @param symbol a symbol to check
-   * @return the historical price
-   */
-  public List<IexHistoricalPrices> fetchHistoricalPricesSymbol(String symbol);
+  List<IexHistoricalPrices> fetchHistoricalPricesDate(String symbol, String date);
 }

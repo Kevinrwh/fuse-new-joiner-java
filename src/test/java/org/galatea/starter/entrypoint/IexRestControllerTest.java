@@ -4,14 +4,12 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import feign.FeignException;
 import java.math.BigDecimal;
 import java.util.Collections;
 import junitparams.JUnitParamsRunner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.galatea.starter.ASpringTest;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,14 +87,11 @@ public class IexRestControllerTest extends ASpringTest {
 
     MvcResult result = this.mvc.perform(
             org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                .get("/iex/historicalPrice?token=DUMMY_TOKEN&symbol=AAPL")
+                .get("/iex/historicalPrice?token=DUMMY_TOKEN&symbol=AAPL&date=20190220")
                 // This URL will be hit by the MockMvc client. The result is configured in the file
                 // src/test/resources/wiremock/mappings/mapping-historicalPrice.json
                 .accept(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$[0].symbol", is("AAPL")))
-        .andExpect(jsonPath("$[0].close").value(new BigDecimal("43.0075")))
-        .andExpect(jsonPath("$[0].high").value(new BigDecimal("43.33")))
         .andExpect(jsonPath("$[0].date").value("2019-02-20"))
         .andReturn();
   }
@@ -149,6 +144,7 @@ public class IexRestControllerTest extends ASpringTest {
                 .accept(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].symbol", is("AAPL")))
+        .andExpect(jsonPath("$[0].date", is("2019-02-20")))
         .andReturn();
   }
 
