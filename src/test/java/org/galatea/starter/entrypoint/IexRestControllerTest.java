@@ -5,11 +5,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import junitparams.JUnitParamsRunner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.galatea.starter.ASpringTest;
+import org.galatea.starter.domain.IexHistoricalPrice;
+import org.galatea.starter.domain.IexHistoricalPriceDTO;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +25,7 @@ import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.galatea.starter.utils.DateHelpers;
 
 
 @RequiredArgsConstructor
@@ -146,6 +153,45 @@ public class IexRestControllerTest extends ASpringTest {
         .andExpect(jsonPath("$[0].symbol", is("AAPL")))
         .andExpect(jsonPath("$[0].date", is("2019-02-20")))
         .andReturn();
+  }
+
+  @Test
+  public void testLastInstanceOfDate() throws Exception {
+
+    // Initialize historical price data
+    BigDecimal close = BigDecimal.valueOf(43.0075);
+    BigDecimal high = BigDecimal.valueOf(43.33);
+    BigDecimal low = BigDecimal.valueOf(42.7475);
+    BigDecimal open = BigDecimal.valueOf(42.7975);
+    String symbol = "AAPL";
+    Integer volume = 104457448;
+    LocalDate date = LocalDate.parse("2019-02-20");
+
+    // To store a couple instances to compare via timestamp
+    List<IexHistoricalPriceDTO> testList = new ArrayList<>();
+
+    IexHistoricalPriceDTO firstPrice = new IexHistoricalPriceDTO(new IexHistoricalPrice(
+        close, high, low, open, symbol, volume, date
+    ));
+
+    // Wait 1 second before initializing the next
+    Thread.sleep(1000);
+
+    IexHistoricalPriceDTO secondPrice = new IexHistoricalPriceDTO(new IexHistoricalPrice(
+        close, high, low, open, symbol, 104457449, date
+    ));
+
+    // Add both to compare
+    testList.add(firstPrice);
+    testList.add(secondPrice);
+
+    // Get the volume data from the most recent price using the helper method
+    IexHistoricalPriceDTO result = DateHelpers.getMostRecentPrice(testList);
+    String vol = result.getVolume().toString();
+
+    Assert.assertTrue(testList.size() == 2);
+    Assert.assertEquals(vol,"104457449");
+    Assert.assertTrue(testList.get(0).getTimestamp().compareTo(result.getTimestamp()) < 0);
   }
 
 }

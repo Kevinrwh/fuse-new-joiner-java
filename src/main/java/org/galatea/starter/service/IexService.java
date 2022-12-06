@@ -18,6 +18,7 @@ import org.galatea.starter.repository.HistoricalPricesRepository;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.galatea.starter.utils.DateHelpers;
 
 /**
  * A layer for transformation, aggregation, and business required when retrieving data from IEX.
@@ -84,18 +85,27 @@ public class IexService implements IexHistoricalPriceService {
 
       storedHistoricalPrices.addAll(fetchHistoricalPricesDate(symbol, date));
 
+      // If there are more than one stored price for this date, use the last one.
+      if (storedHistoricalPrices.size() > 1) {
+        IexHistoricalPriceDTO mostRecentPrice = DateHelpers.getMostRecentPrice(storedHistoricalPrices);
+        storedHistoricalPrices.clear();
+        storedHistoricalPrices.add(mostRecentPrice);
+      }
+
       // If there is no response stored, call the API and save it
       if(storedHistoricalPrices.isEmpty()) {
 
-        List<IexHistoricalPrice> historicalPrices = iexClient.getHistoricalPricesForSymbolDateAndRange(symbol, range, date);
+        List<IexHistoricalPrice> historicalPrices = iexClient
+            .getHistoricalPricesForSymbolDateAndRange(symbol, range, date);
 
         if (!historicalPrices.isEmpty()) {
           result.add(historicalPrices.get(historicalPrices.size()-1));
-          saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices.get(historicalPrices.size()-1)));
+          saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices
+              .get(0)));
         }
 
       } else { // Return the stored response
-        result.add(new IexHistoricalPrice(storedHistoricalPrices.get(storedHistoricalPrices.size()-1)));
+        result.add(new IexHistoricalPrice(storedHistoricalPrices.get(0)));
       }
 
     } else if (range == null && date == null) { // Return the default of range at 30 days
@@ -107,7 +117,15 @@ public class IexService implements IexHistoricalPriceService {
       // For each day, query the database or call the API and append to the result
       while (!start.isAfter(end)) {
 
-        List <IexHistoricalPriceDTO> pricesForDay = fetchHistoricalPricesDate(symbol, start.format(DateTimeFormatter.BASIC_ISO_DATE)); // get for that day
+        List <IexHistoricalPriceDTO> pricesForDay = fetchHistoricalPricesDate(
+            symbol, start.format(DateTimeFormatter.BASIC_ISO_DATE)); // get for that day
+
+        // If there are multiple values for this date, get the most recent one
+        if (pricesForDay.size() > 1) {
+          IexHistoricalPriceDTO mostRecentPrice = DateHelpers.getMostRecentPrice(pricesForDay);
+          pricesForDay.clear();
+          pricesForDay.add(mostRecentPrice);
+        }
 
         if (pricesForDay.isEmpty()) {
 
@@ -115,12 +133,12 @@ public class IexService implements IexHistoricalPriceService {
               iexClient.getHistoricalPricesDate(symbol, start.format(DateTimeFormatter.BASIC_ISO_DATE));
 
           if(!historicalPrices.isEmpty()) {
-            result.add(historicalPrices.get(historicalPrices.size()-1));
-            saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices.get(historicalPrices.size()-1)));
+            result.add(historicalPrices.get(0));
+            saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices.get(0)));
           }
 
         } else {
-          result.add(new IexHistoricalPrice(pricesForDay.get(pricesForDay.size()-1)));
+          result.add(new IexHistoricalPrice(pricesForDay.get(0)));
         }
 
         // Increment to the next day
@@ -138,17 +156,23 @@ public class IexService implements IexHistoricalPriceService {
       // Query the database or call the API and append the result
       storedHistoricalPrices.addAll(fetchHistoricalPricesDate(symbol, date));
 
+      if (storedHistoricalPrices.size() > 1) {
+        IexHistoricalPriceDTO mostRecentPrice = DateHelpers.getMostRecentPrice(storedHistoricalPrices);
+        storedHistoricalPrices.clear();
+        storedHistoricalPrices.add(mostRecentPrice);
+      }
+
       if (storedHistoricalPrices.isEmpty()) {
 
         List<IexHistoricalPrice> historicalPrices =
             iexClient.getHistoricalPricesDate(symbol, date);
 
         if (!historicalPrices.isEmpty()) {
-          result.add((historicalPrices.get(historicalPrices.size()-1)));
-          saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices.get(historicalPrices.size()-1)));
+          result.add((historicalPrices.get(0)));
+          saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices.get(0)));
         }
       } else {
-        result.add(new IexHistoricalPrice(storedHistoricalPrices.get(storedHistoricalPrices.size()-1)));
+        result.add(new IexHistoricalPrice(storedHistoricalPrices.get(0)));
       }
 
     } else if (date == null && range != null) { // A range was provided
@@ -158,14 +182,21 @@ public class IexService implements IexHistoricalPriceService {
       }
 
       // Helper method to get a list of dates
-      List<LocalDate> dates = getDates(range);
+      List<LocalDate> dates = DateHelpers.getDates(range);
 
       LocalDate start = dates.get(0);
       LocalDate end = LocalDate.now();
 
       while (!start.isAfter(end)) {
 
-        List <IexHistoricalPriceDTO> pricesForDay = fetchHistoricalPricesDate(symbol, start.format(DateTimeFormatter.BASIC_ISO_DATE));
+        List <IexHistoricalPriceDTO> pricesForDay = fetchHistoricalPricesDate(
+            symbol, start.format(DateTimeFormatter.BASIC_ISO_DATE));
+
+        if (pricesForDay.size() > 1) {
+          IexHistoricalPriceDTO mostRecentPrice = DateHelpers.getMostRecentPrice(pricesForDay);
+          pricesForDay.clear();
+          pricesForDay.add(mostRecentPrice);
+        }
 
         if (pricesForDay.isEmpty()) {
 
@@ -173,12 +204,12 @@ public class IexService implements IexHistoricalPriceService {
               iexClient.getHistoricalPricesDate(symbol, start.format(DateTimeFormatter.BASIC_ISO_DATE));
 
           if(!historicalPrices.isEmpty()) {
-            result.add(historicalPrices.get(historicalPrices.size()-1));
-            saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices.get(historicalPrices.size()-1)));
+            result.add(historicalPrices.get(0));
+            saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices.get(0)));
           }
 
         } else {
-          result.add(new IexHistoricalPrice(pricesForDay.get(pricesForDay.size()-1)));
+          result.add(new IexHistoricalPrice(pricesForDay.get(0)));
         }
 
         start = start.plusDays(1);
@@ -213,42 +244,4 @@ public class IexService implements IexHistoricalPriceService {
     return historicalPricesRepository.findByDate(symbol, localDate);
   }
 
-  /**
-   * Get the list of dates within the range given the scenario.
-   * @param range, a range that includes the dates we want
-   * @return a list of dates
-   */
-  public List<LocalDate> getDates(String range) {
-    LocalDate end = LocalDate.now();
-    List<LocalDate> totalDates = new ArrayList<>();
-    LocalDate start = end.minusDays(30); // default
-
-    // Reassign start value if a range was entered
-    if (range.equalsIgnoreCase("max")) {
-      start = end.minusYears(15);
-    } else if (range.equalsIgnoreCase("5y")) {
-      start = end.minusYears(5);
-    } else if (range.equalsIgnoreCase("2y")) {
-      start = end.minusYears(2);
-    } else if (range.equalsIgnoreCase("1y")) {
-      start = end.minusYears(1);
-    } else if (range.equalsIgnoreCase("ytd")) {
-      // to do
-    } else if (range.equalsIgnoreCase("6m")) {
-      start = end.minusMonths(6);
-    } else if(range.equalsIgnoreCase("3m")) {
-      start = end.minusMonths(3);
-    } else if(range.equalsIgnoreCase("1m") || range.equalsIgnoreCase("1mm")) {
-      start = end.minusMonths(1);
-    } else if(range.equalsIgnoreCase("5d")) {
-      start = end.minusDays(5);
-    }
-
-    while(!start.isAfter(end)) {
-      totalDates.add(start);
-      start = start.plusDays(1);
-    }
-
-    return totalDates;
-  }
 }

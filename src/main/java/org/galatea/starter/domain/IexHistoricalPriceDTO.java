@@ -3,6 +3,7 @@ package org.galatea.starter.domain;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -32,9 +33,11 @@ public class IexHistoricalPriceDTO {
   private Integer volume;
   @JsonFormat(pattern = "yyyy-MM-dd")
   private LocalDate date;
+  @JsonIgnore
+  private Timestamp timestamp;
 
   /**
-   * Constructor for our data transfer object
+   * Constructor for our data transfer object with a timestamp to get the latest instance
    * @param historicalPrice a historical price to store
    */
   public IexHistoricalPriceDTO(final IexHistoricalPrice historicalPrice) {
@@ -46,6 +49,7 @@ public class IexHistoricalPriceDTO {
     this.symbol = historicalPrice.getSymbol();
     this.volume = historicalPrice.getVolume();
     this.date = historicalPrice.getDate();
+    this.timestamp = new Timestamp(System.currentTimeMillis());
 
   }
 
