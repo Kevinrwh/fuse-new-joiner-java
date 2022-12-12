@@ -66,7 +66,7 @@ public class IexRestController {
       @RequestParam(value = "range", required = false) final String range,
       @RequestParam(value = "date", required = false) final String date) throws Exception {
 
-    return iexService.getHistoricalPricesForSymbols(symbol, range, date);
+    return iexService.getHistoricalPrices(symbol, range, date);
 
   }
 

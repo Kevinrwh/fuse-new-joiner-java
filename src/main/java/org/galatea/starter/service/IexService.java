@@ -66,159 +66,17 @@ public class IexService implements IexHistoricalPriceService {
    * @param range a range to check prices for
    * @param date a date to check prices for; has priority to range if both are included
    */
-  public List<IexHistoricalPrice> getHistoricalPricesForSymbols(
+  public List<IexHistoricalPrice> getHistoricalPrices(
       final String symbol,
       final String range,
       final String date) throws Exception {
 
-    // Initialize our result and stored result array
-    List<IexHistoricalPrice> result = new ArrayList<IexHistoricalPrice>();
-    List<IexHistoricalPriceDTO> storedHistoricalPrices = new ArrayList<IexHistoricalPriceDTO>();
-
-    // No symbol provided
+    // Symbol validation
     if (StringUtils.isBlank(symbol)) {
       throw new EntityNotFoundException(symbol.getClass(), symbol);
     }
 
-    // Both range & date are included
-    if (StringUtils.isNotBlank(range) && StringUtils.isNotBlank(date)) {
-
-      storedHistoricalPrices.addAll(fetchHistoricalPricesDate(symbol, date));
-
-      // If there are more than one stored price for this date, use the last one.
-      if (storedHistoricalPrices.size() > 1) {
-        IexHistoricalPriceDTO mostRecentPrice = DateHelpers.getMostRecentPrice(storedHistoricalPrices);
-        storedHistoricalPrices.clear();
-        storedHistoricalPrices.add(mostRecentPrice);
-      }
-
-      // If there is no response stored, call the API and save it
-      if(storedHistoricalPrices.isEmpty()) {
-
-        List<IexHistoricalPrice> historicalPrices = iexClient
-            .getHistoricalPricesForSymbolDateAndRange(symbol, range, date);
-
-        if (!historicalPrices.isEmpty()) {
-          result.add(historicalPrices.get(historicalPrices.size()-1));
-          saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices
-              .get(0)));
-        }
-
-      } else { // Return the stored response
-        result.add(new IexHistoricalPrice(storedHistoricalPrices.get(0)));
-      }
-
-    } else if (range == null && date == null) { // Return the default of range at 30 days
-
-      // Initialize the start and end dates
-      LocalDate end = LocalDate.now();
-      LocalDate start = end.minusDays(30);
-
-      // For each day, query the database or call the API and append to the result
-      while (!start.isAfter(end)) {
-
-        List <IexHistoricalPriceDTO> pricesForDay = fetchHistoricalPricesDate(
-            symbol, start.format(DateTimeFormatter.BASIC_ISO_DATE)); // get for that day
-
-        // If there are multiple values for this date, get the most recent one
-        if (pricesForDay.size() > 1) {
-          IexHistoricalPriceDTO mostRecentPrice = DateHelpers.getMostRecentPrice(pricesForDay);
-          pricesForDay.clear();
-          pricesForDay.add(mostRecentPrice);
-        }
-
-        if (pricesForDay.isEmpty()) {
-
-          List<IexHistoricalPrice> historicalPrices =
-              iexClient.getHistoricalPricesDate(symbol, start.format(DateTimeFormatter.BASIC_ISO_DATE));
-
-          if(!historicalPrices.isEmpty()) {
-            result.add(historicalPrices.get(0));
-            saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices.get(0)));
-          }
-
-        } else {
-          result.add(new IexHistoricalPrice(pricesForDay.get(0)));
-        }
-
-        // Increment to the next day
-        start = start.plusDays(1);
-
-      }
-
-    } else if (range == null && date != null) { // A date was provided
-
-      // Verify the date is not whitespace
-      if (date.equals("")) {
-        throw new HttpMessageNotReadableException("\"date\" is not allowed to be empty");
-      }
-
-      // Query the database or call the API and append the result
-      storedHistoricalPrices.addAll(fetchHistoricalPricesDate(symbol, date));
-
-      if (storedHistoricalPrices.size() > 1) {
-        IexHistoricalPriceDTO mostRecentPrice = DateHelpers.getMostRecentPrice(storedHistoricalPrices);
-        storedHistoricalPrices.clear();
-        storedHistoricalPrices.add(mostRecentPrice);
-      }
-
-      if (storedHistoricalPrices.isEmpty()) {
-
-        List<IexHistoricalPrice> historicalPrices =
-            iexClient.getHistoricalPricesDate(symbol, date);
-
-        if (!historicalPrices.isEmpty()) {
-          result.add((historicalPrices.get(0)));
-          saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices.get(0)));
-        }
-      } else {
-        result.add(new IexHistoricalPrice(storedHistoricalPrices.get(0)));
-      }
-
-    } else if (date == null && range != null) { // A range was provided
-
-      if (range.equals("")) {
-        throw new HttpMessageNotReadableException("\"range\" is not allowed to be empty");
-      }
-
-      // Helper method to get a list of dates
-      List<LocalDate> dates = DateHelpers.getDates(range);
-
-      LocalDate start = dates.get(0);
-      LocalDate end = LocalDate.now();
-
-      while (!start.isAfter(end)) {
-
-        List <IexHistoricalPriceDTO> pricesForDay = fetchHistoricalPricesDate(
-            symbol, start.format(DateTimeFormatter.BASIC_ISO_DATE));
-
-        if (pricesForDay.size() > 1) {
-          IexHistoricalPriceDTO mostRecentPrice = DateHelpers.getMostRecentPrice(pricesForDay);
-          pricesForDay.clear();
-          pricesForDay.add(mostRecentPrice);
-        }
-
-        if (pricesForDay.isEmpty()) {
-
-          List<IexHistoricalPrice> historicalPrices =
-              iexClient.getHistoricalPricesDate(symbol, start.format(DateTimeFormatter.BASIC_ISO_DATE));
-
-          if(!historicalPrices.isEmpty()) {
-            result.add(historicalPrices.get(0));
-            saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrices.get(0)));
-          }
-
-        } else {
-          result.add(new IexHistoricalPrice(pricesForDay.get(0)));
-        }
-
-        start = start.plusDays(1);
-
-      }
-    }
-
-    // Return the historical prices
-    return result;
+    return getResponseForQuery(symbol, range, date);
 
   }
 
@@ -242,6 +100,202 @@ public class IexService implements IexHistoricalPriceService {
     LocalDate localDate = LocalDate.parse(date, DateTimeFormatter.BASIC_ISO_DATE);
 
     return historicalPricesRepository.findByDate(symbol, localDate);
+  }
+
+  private List<IexHistoricalPrice> getResponseForQuery(String symbol, String range, String date) {
+
+    List<IexHistoricalPrice> result = new ArrayList<IexHistoricalPrice>();
+
+    // Return the response based on the query
+    if (StringUtils.isNotBlank(range) && StringUtils.isNotBlank(date)) { // Date > Priority
+
+      result.addAll(getResultsForDateAndRange(symbol, range, date));
+
+    } else if (range == null && date == null) { // Return the default (range)
+
+      result.addAll(getResultsForSymbol(symbol));
+
+    } else if (range == null && date != null) { // Return by date
+
+      result.addAll(getResultsForDate(symbol, date));
+
+    } else if (date == null && range != null) { // Return by range
+
+      result.addAll(getResultsForRange(symbol, range));
+
+    }
+
+    return result;
+  }
+  private List<IexHistoricalPrice> getResultsForDateAndRange(String symbol, String range, String date) {
+
+    List<IexHistoricalPrice> result = new ArrayList<IexHistoricalPrice>();
+    List<IexHistoricalPriceDTO> storedHistoricalPrices = new ArrayList<IexHistoricalPriceDTO>();
+
+    storedHistoricalPrices.addAll(fetchHistoricalPricesDate(symbol, date));
+
+    // If there are more than one stored price for this date, use the last one.
+    if (storedHistoricalPrices.size() > 1) {
+      storedHistoricalPrices = getMostRecentPriceInList(storedHistoricalPrices);
+    }
+
+    // If there is no response stored, call the API and save it
+    if(storedHistoricalPrices.isEmpty()) {
+      result.addAll(getClientResponseForRangeAndDate(symbol, range, date));
+    } else { // Return the stored response
+      result.add(new IexHistoricalPrice(storedHistoricalPrices.get(0)));
+    }
+
+    return result;
+  }
+
+  private List<IexHistoricalPrice> getResultsForSymbol(String symbol) {
+
+    // Initialize the start and end dates
+    LocalDate end = LocalDate.now();
+    LocalDate start = end.minusDays(30);
+
+    return getPricesForDatesInRange(symbol, start, end);
+
+  }
+
+  private List<IexHistoricalPrice> getResultsForRange(String symbol, String range) {
+
+//    List<IexHistoricalPrice> result = new ArrayList<IexHistoricalPrice>();
+
+    if (range.equals("")) {
+      throw new HttpMessageNotReadableException("\"range\" is not allowed to be empty");
+    }
+
+//    List<LocalDate> dates;
+    LocalDate start;
+    LocalDate end = LocalDate.now();
+
+    // Helper method to get a list of dates
+    try {
+//      dates = DateHelpers.getDates(range);
+//      start = dates.get(0);
+      start = DateHelpers.getDates(range).get(0);
+    } catch(Exception e) {
+      throw new RuntimeException(e);
+    }
+
+    return getPricesForDatesInRange(symbol, start, end);
+
+  }
+
+  private List<IexHistoricalPrice> getResultsForDate(String symbol, String date) {
+
+    // Verify the date is not whitespace
+    if (date.equals("")) {
+      throw new HttpMessageNotReadableException("\"date\" is not allowed to be empty");
+    }
+
+    List<IexHistoricalPrice> result = new ArrayList<IexHistoricalPrice>();
+    List<IexHistoricalPriceDTO> storedHistoricalPrices = new ArrayList<>();
+
+    // Query the database or call the API and append the result
+    storedHistoricalPrices.addAll(getStoredPricesForDate(symbol, date));
+    
+    if (storedHistoricalPrices.isEmpty()) {
+      result.addAll(getClientResponseForDate(symbol, LocalDate.parse(date, DateTimeFormatter.BASIC_ISO_DATE)));
+    } else {
+      result.add(new IexHistoricalPrice(storedHistoricalPrices.get(0)));
+    }
+    
+    return result;
+
+  }
+  
+  private List<IexHistoricalPriceDTO> getStoredPricesForDate(String symbol, String date) {
+    
+    List<IexHistoricalPriceDTO> storedHistoricalPrices = fetchHistoricalPricesDate(symbol, date);
+    
+    if(storedHistoricalPrices.size() > 1) {
+      return getMostRecentPriceInList(storedHistoricalPrices);
+    }
+    
+    return storedHistoricalPrices;
+    
+  }
+
+  private List<IexHistoricalPriceDTO> getMostRecentPriceInList(List<IexHistoricalPriceDTO> storedHistoricalPrices) {
+
+    IexHistoricalPriceDTO mostRecentPrice = DateHelpers.getMostRecentPrice(storedHistoricalPrices);
+    storedHistoricalPrices.clear();
+    storedHistoricalPrices.add(mostRecentPrice);
+
+    return storedHistoricalPrices;
+  }
+
+  private List<IexHistoricalPrice> getClientResponseForRangeAndDate(String symbol, String range, String date) {
+
+    List<IexHistoricalPrice> result = new ArrayList<IexHistoricalPrice>();
+
+    List<IexHistoricalPrice> historicalPrices = iexClient
+        .getHistoricalPricesForSymbolDateAndRange(symbol, range, date);
+
+    if (!historicalPrices.isEmpty()) {
+      result.add(saveAndReturnHistoricalPrice(historicalPrices));
+    }
+
+    return result;
+  }
+
+  private IexHistoricalPrice saveAndReturnHistoricalPrice(List<IexHistoricalPrice> historicalPrices) {
+
+    IexHistoricalPrice historicalPrice = historicalPrices.get(historicalPrices.size()-1);
+    saveIexHistoricalPrices(new IexHistoricalPriceDTO(historicalPrice));
+    return historicalPrice;
+
+  }
+
+  private List<IexHistoricalPrice> getPricesForDatesInRange(String symbol, LocalDate start, LocalDate end) {
+
+    List<IexHistoricalPrice> result = new ArrayList<IexHistoricalPrice>();
+
+    while(!start.isAfter(end)) {
+      List <IexHistoricalPriceDTO> pricesForDay = fetchHistoricalPricesDate(
+          symbol, start.format(DateTimeFormatter.BASIC_ISO_DATE)); // get for that day
+
+      result.addAll(addDatePriceToRange(pricesForDay, symbol, start));
+
+      start = start.plusDays(1);
+    }
+
+    return result;
+  }
+
+  private List<IexHistoricalPrice> addDatePriceToRange(List<IexHistoricalPriceDTO> pricesForDay, String symbol, LocalDate day) {
+
+    List<IexHistoricalPrice> result = new ArrayList<>();
+
+    if(pricesForDay.size() > 1) {
+      pricesForDay = getMostRecentPriceInList(pricesForDay);
+    }
+
+    if(pricesForDay.isEmpty()) {
+      result.addAll(getClientResponseForDate(symbol, day));
+    } else {
+      result.add(new IexHistoricalPrice(pricesForDay.get(0)));
+    }
+
+    return result;
+
+  }
+
+  private List<IexHistoricalPrice> getClientResponseForDate(String symbol, LocalDate date) {
+
+    List<IexHistoricalPrice> result = new ArrayList<IexHistoricalPrice>();
+
+    List<IexHistoricalPrice> historicalPrices = iexClient
+        .getHistoricalPricesDate(symbol, date.format(DateTimeFormatter.BASIC_ISO_DATE));
+
+    if (!historicalPrices.isEmpty()) {
+      result.add(saveAndReturnHistoricalPrice(historicalPrices));
+    }
+
+    return result;
   }
 
 }

@@ -6,10 +6,11 @@ import java.util.List;
 import org.galatea.starter.domain.IexHistoricalPriceDTO;
 
 public class DateHelpers {
-  public static List<LocalDate> getDates(String range) {
+  public static List<LocalDate> getDates(String range) throws NullPointerException {
+
     LocalDate end = LocalDate.now();
     List<LocalDate> totalDates = new ArrayList<>();
-    LocalDate start = end.minusDays(30); // default
+    LocalDate start = null;
 
     // Reassign start value if a range was entered
     if (range.equalsIgnoreCase("max")) {
