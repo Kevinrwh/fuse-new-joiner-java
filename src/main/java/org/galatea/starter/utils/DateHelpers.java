@@ -8,14 +8,16 @@ import org.galatea.starter.domain.IexHistoricalPriceDTO;
 public class DateHelpers {
 
   /**
+   * Gets the list of dates within the range.
+   * Calls the helper method getListOfDates
    *
-   * @param range
-   * @return
+   * @param range, a range of reference
+   * @return a list of dates
    * @throws NullPointerException
    */
   public static List<LocalDate> getDates(String range) throws NullPointerException {
 
-    if (range == null) {
+    if (range == null || range.equalsIgnoreCase("")) {
       throw new NullPointerException("\"range\" is not allowed to be empty");
     }
 
@@ -25,6 +27,12 @@ public class DateHelpers {
 
   }
 
+  /**
+   * Get the first date in a range.
+   *
+   * @param range, a range of reference
+   * @return a date
+   */
   private static LocalDate getFirstDateInRange(String range) {
 
     if (range.equalsIgnoreCase("max")) {
@@ -37,6 +45,12 @@ public class DateHelpers {
 
   }
 
+  /**
+   * Parse the range to get the first date in a custom range.
+   *
+   * @param range, a range of reference
+   * @return a date
+   */
   private static LocalDate getDateInCustomRange(String range) {
 
     int digitPrefix = Integer.parseInt(range.substring(0, range.length()-1));
@@ -54,6 +68,13 @@ public class DateHelpers {
 
   }
 
+  /**
+   * Helper method to get a list of dates in the range.
+   *
+   * @param start, a starting date
+   * @param end, an end date
+   * @return
+   */
   private static List<LocalDate> getListOfDates(LocalDate start, LocalDate end) {
 
     List<LocalDate> totalDates = new ArrayList<>();
@@ -68,26 +89,47 @@ public class DateHelpers {
   }
 
   /**
-   * Find the most recent price in the list of historical prices given their timestamps
-   * @param storedHistoricalPrices
+   * Return the most recent historical price for a date.
+   *
+   * @param storedHistoricalPrices, a list of stored historical prices
    * @return the most recent historical price
    */
   public static IexHistoricalPriceDTO getMostRecentPrice(
       List<IexHistoricalPriceDTO> storedHistoricalPrices) {
-    int mostRecentIndex = 0;
-    int i;
-    int len = storedHistoricalPrices.size();
 
-    // Replace the most recent index if a later timestamp is found
-    for (i = 0; i < len; i++) {
-      if (storedHistoricalPrices.get(i).getTimestamp()
-          .compareTo(storedHistoricalPrices.get(mostRecentIndex)
-              .getTimestamp()) > 0) {
+    int mostRecentIndex = 0;
+
+    for (int i = 0; i < storedHistoricalPrices.size(); i++) {
+
+      if (updateRecentPrice(storedHistoricalPrices, i, mostRecentIndex)) {
         mostRecentIndex = i;
       }
+
     }
 
-    // Return the latest instance of historical price for this date
     return storedHistoricalPrices.get(mostRecentIndex);
   }
+
+  /**
+   * Update the recent price index if a more recent price is found.
+   *
+   * @param storedHistoricalPrices, a list of stored historical prices
+   * @param currentIndex, an index of the current price
+   * @param mostRecentIndex, an index of the running most recent price
+   * @return true if the currentIndex holds a more recent price
+   */
+  private static boolean updateRecentPrice(List<IexHistoricalPriceDTO> storedHistoricalPrices, int currentIndex, int mostRecentIndex) {
+
+    if (storedHistoricalPrices.get(currentIndex).getTimestamp()
+        .compareTo(storedHistoricalPrices.get(mostRecentIndex)
+            .getTimestamp()) > 0) {
+
+      return true;
+
+    }
+
+    return false;
+
+  }
+
 }
