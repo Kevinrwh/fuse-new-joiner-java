@@ -6,32 +6,57 @@ import java.util.List;
 import org.galatea.starter.domain.IexHistoricalPriceDTO;
 
 public class DateHelpers {
+
+  /**
+   *
+   * @param range
+   * @return
+   * @throws NullPointerException
+   */
   public static List<LocalDate> getDates(String range) throws NullPointerException {
 
-    LocalDate end = LocalDate.now();
-    List<LocalDate> totalDates = new ArrayList<>();
-    LocalDate start = null;
-
-    // Reassign start value if a range was entered
-    if (range.equalsIgnoreCase("max")) {
-      start = end.minusYears(15);
-    } else if (range.equalsIgnoreCase("5y")) {
-      start = end.minusYears(5);
-    } else if (range.equalsIgnoreCase("2y")) {
-      start = end.minusYears(2);
-    } else if (range.equalsIgnoreCase("1y")) {
-      start = end.minusYears(1);
-    } else if (range.equalsIgnoreCase("ytd")) {
-      // to do
-    } else if (range.equalsIgnoreCase("6m")) {
-      start = end.minusMonths(6);
-    } else if(range.equalsIgnoreCase("3m")) {
-      start = end.minusMonths(3);
-    } else if(range.equalsIgnoreCase("1m") || range.equalsIgnoreCase("1mm")) {
-      start = end.minusMonths(1);
-    } else if(range.equalsIgnoreCase("5d")) {
-      start = end.minusDays(5);
+    if (range == null) {
+      throw new NullPointerException("\"range\" is not allowed to be empty");
     }
+
+    LocalDate start = getFirstDateInRange(range);
+
+    return getListOfDates(start, LocalDate.now());
+
+  }
+
+  private static LocalDate getFirstDateInRange(String range) {
+
+    if (range.equalsIgnoreCase("max")) {
+      return LocalDate.now().minusYears(15);
+    } else if (range.equalsIgnoreCase("ytd")) {
+      return  LocalDate.of(LocalDate.now().getYear(), 1, 1);
+    }
+
+    return getDateInCustomRange(range.toLowerCase());
+
+  }
+
+  private static LocalDate getDateInCustomRange(String range) {
+
+    int digitPrefix = Integer.parseInt(range.substring(0, range.length()-1));
+    LocalDate result = LocalDate.now();
+
+    if (range.endsWith("y")) {
+      result = result.minusYears(digitPrefix);
+    } else if (range.endsWith("m")) {
+      result = result.minusMonths(digitPrefix);
+    } else if (range.endsWith("d")) {
+      result = result.minusDays(digitPrefix);
+    }
+
+    return result;
+
+  }
+
+  private static List<LocalDate> getListOfDates(LocalDate start, LocalDate end) {
+
+    List<LocalDate> totalDates = new ArrayList<>();
 
     while(!start.isAfter(end)) {
       totalDates.add(start);
@@ -39,6 +64,7 @@ public class DateHelpers {
     }
 
     return totalDates;
+
   }
 
   /**

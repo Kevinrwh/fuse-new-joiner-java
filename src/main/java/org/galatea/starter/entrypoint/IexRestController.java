@@ -71,8 +71,9 @@ public class IexRestController {
   }
 
   /**
-   * Return a list of historical prices.
-   * @return a stored historical price
+   * Return all stored historical prices.
+   *
+   * @return a list of stored historical prices
    */
   @GetMapping(value = "/iexHistoricalPrices")
   public List<IexHistoricalPriceDTO> fetchIexHistoricalPricesList() {
