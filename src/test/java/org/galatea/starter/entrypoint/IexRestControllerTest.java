@@ -4,13 +4,17 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import feign.FeignException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import junitparams.JUnitParamsRunner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.galatea.starter.ASpringTest;
+import org.galatea.starter.domain.IexHistoricalPrice;
+import org.galatea.starter.domain.IexHistoricalPriceDTO;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,6 +25,7 @@ import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.galatea.starter.utils.DateHelpers;
 
 
 @RequiredArgsConstructor
@@ -89,14 +94,11 @@ public class IexRestControllerTest extends ASpringTest {
 
     MvcResult result = this.mvc.perform(
             org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                .get("/iex/historicalPrice?token=DUMMY_TOKEN&symbol=AAPL")
+                .get("/iex/historicalPrice?token=DUMMY_TOKEN&symbol=AAPL&date=20190220")
                 // This URL will be hit by the MockMvc client. The result is configured in the file
                 // src/test/resources/wiremock/mappings/mapping-historicalPrice.json
                 .accept(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$[0].symbol", is("AAPL")))
-        .andExpect(jsonPath("$[0].close").value(new BigDecimal("43.0075")))
-        .andExpect(jsonPath("$[0].high").value(new BigDecimal("43.33")))
         .andExpect(jsonPath("$[0].date").value("2019-02-20"))
         .andReturn();
   }
@@ -149,7 +151,47 @@ public class IexRestControllerTest extends ASpringTest {
                 .accept(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].symbol", is("AAPL")))
+        .andExpect(jsonPath("$[0].date", is("2019-02-20")))
         .andReturn();
+  }
+
+  @Test
+  public void testLastInstanceOfDate() throws Exception {
+
+    // Initialize historical price data
+    BigDecimal close = BigDecimal.valueOf(43.0075);
+    BigDecimal high = BigDecimal.valueOf(43.33);
+    BigDecimal low = BigDecimal.valueOf(42.7475);
+    BigDecimal open = BigDecimal.valueOf(42.7975);
+    String symbol = "AAPL";
+    Integer volume = 104457448;
+    LocalDate date = LocalDate.parse("2019-02-20");
+
+    // To store a couple instances to compare via timestamp
+    List<IexHistoricalPriceDTO> testList = new ArrayList<>();
+
+    IexHistoricalPriceDTO firstPrice = new IexHistoricalPriceDTO(new IexHistoricalPrice(
+        close, high, low, open, symbol, volume, date
+    ));
+
+    // Wait 1 second before initializing the next
+    Thread.sleep(1000);
+
+    IexHistoricalPriceDTO secondPrice = new IexHistoricalPriceDTO(new IexHistoricalPrice(
+        close, high, low, open, symbol, 104457449, date
+    ));
+
+    // Add both to compare
+    testList.add(firstPrice);
+    testList.add(secondPrice);
+
+    // Get the volume data from the most recent price using the helper method
+    IexHistoricalPriceDTO result = DateHelpers.getMostRecentPrice(testList);
+    String vol = result.getVolume().toString();
+
+    Assert.assertTrue(testList.size() == 2);
+    Assert.assertEquals(vol,"104457449");
+    Assert.assertTrue(testList.get(0).getTimestamp().compareTo(result.getTimestamp()) < 0);
   }
 
 }
